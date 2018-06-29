@@ -1,6 +1,5 @@
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -8,46 +7,53 @@ import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Random;
 import java.util.stream.Collectors;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
 public class GraphPanel extends JPanel {
+    private static final Color GREEN = new Color(0, 150, 50);
+    private static final Color RED = new Color(255, 0, 50);
+    private static final Color gridColor = new Color(200, 200, 200, 200);
+    private static final Stroke GRAPH_STROKE = new BasicStroke(.05f);
 
     private int padding = 25;
     private int twicePadding = padding * 2;
-    //private int labelPadding = 25;
     private int xLabelPadding = 25;
     private int yLabelPadding = 50;
     private Color lineColor;
     private Color pointColor;
-    private Color gridColor = new Color(200, 200, 200, 200);
-    private static final Stroke GRAPH_STROKE = new BasicStroke(.5f);
+    private Color fillColor;
     private int pointWidth = 0;
     private int numberYDivisions = 10;
     private List<Day> days;
     private Day firstDay;
     private Day lastDay;
 
+    private int[] xPoints;
+    private int[] yPoints;
+
     public GraphPanel(List<Day> days) {
         this.days = days.stream()
-                .filter(x -> x.getOpen() != -1)
+                .filter(x -> x.getOpen().orElse(-1D) != -1)
                 .collect(Collectors.toList());
 
         //Green if uptrend. Red if downtrend
         this.firstDay = days.get(0);
         this.lastDay = days.get(days.size() - 1);
-        if (firstDay.getOpen() > lastDay.getOpen()) {
-            this.lineColor = Color.RED;
-            this.pointColor = Color.RED;
+        if (firstDay.getOpen().orElse(-1D) > lastDay.getOpen().orElse(-1D)) {
+            this.fillColor = RED;
         } else {
-            this.lineColor = Color.GREEN;
-            this.pointColor = Color.GREEN;
+            this.fillColor = GREEN;
         }
+        //TODO...
+        //graphPoints  = 6653
+        //days  = 6653
+        //nPoints = 6660
+        //----
+        this.xPoints = new int[days.size() + 2];
+        this.yPoints = new int[days.size() + 2];
     }
 
     @Override
@@ -62,10 +68,9 @@ public class GraphPanel extends JPanel {
         List<Point> graphPoints = new ArrayList<>();
         for (int i = 0; i < days.size(); i++) {
             int x1 = (int) (i * xScale + padding + xLabelPadding);
-            int y1 = (int) ((getAdditionalHeight() - days.get(i).getOpen()) * yScale + padding);
+            int y1 = (int) ((getAdditionalHeight() - days.get(i).getOpen().orElse(-1D)) * yScale + padding);
             graphPoints.add(new Point(x1, y1));
         }
-
         // draw white background
         g2.setColor(Color.WHITE);
         g2.fillRect(padding + xLabelPadding, padding,
@@ -106,7 +111,6 @@ public class GraphPanel extends JPanel {
 
                     g2.setColor(Color.BLACK);
                     String xLabel = days.get(i).getDate() + "";
-                    FontMetrics metrics = g2.getFontMetrics();
                     drawRotate(g2, x - 5, y0, 90, xLabel);
                 }
                 g2.drawLine(x, y0, x, y1);
@@ -130,6 +134,10 @@ public class GraphPanel extends JPanel {
 
         g2.setStroke(oldStroke);
         g2.setColor(pointColor);
+
+
+        xPoints[0] = (graphPoints.get(0).x);
+        yPoints[0] = (getHeight() - padding - yLabelPadding);
         for (int i = 0; i < graphPoints.size(); i++) {
             int x = graphPoints.get(i).x - pointWidth / 2;
             int y = graphPoints.get(i).y - pointWidth / 2;
@@ -137,24 +145,47 @@ public class GraphPanel extends JPanel {
             int ovalH = pointWidth;
             g2.fillOval(x, y, ovalW, ovalH);
             //draw fill
-            g2.drawLine(x, y, x, getHeight() - padding - yLabelPadding - 1 - pointWidth);
+            xPoints[i + 1] = x;
+            yPoints[i + 1] = y;
+            //g2.drawLine(x, y, x, getHeight() - padding - yLabelPadding - 1 - pointWidth);
         }
+        //Refactor this
+
+        xPoints[days.size() + 1] = (graphPoints.get(days.size() - 1).x);
+        yPoints[days.size() + 1] = (getHeight() - padding - yLabelPadding);
+
+        System.out.println("xPoints[] ...");
+        System.out.println("graphPoints  = " + graphPoints.size());
+        System.out.println("days  = " + days.size());
+        System.out.println("nPoints = " + (days.size() + 2));
+        for (int i1 = 0; i1 < xPoints.length; i1++) {
+            int xPoint = xPoints[i1];
+            System.out.println("xPoints[" + i1 +"] = " + xPoint);
+        }
+        for (int i1 = 0; i1 < yPoints.length; i1++) {
+            int yPoint = yPoints[i1];
+            System.out.println("yPoints[" + i1 +"] = " + yPoint);
+        }
+
+        g2.setColor(fillColor);
+        g2.fillPolygon(xPoints, yPoints, days.size() + 2);
+        g2.setColor(Color.BLACK);
     }
 
     private double getMinScore() {
         double minScore = Double.MAX_VALUE;
         for (Day day : days) {
-            minScore = Math.min(minScore, day.getOpen());
+            minScore = Math.min(minScore, day.getOpen().orElse(-1D));
         }
         return minScore;
     }
 
     private double getMaxScore() {
-        return days.stream().mapToDouble(Day::getOpen).max().orElse(-1);
+        return days.stream().mapToDouble(x -> x.getOpen().orElse(-1D)).max().orElse(-1);
     }
 
     private double getAverage() {
-        return days.stream().mapToDouble(Day::getOpen).average().orElse(-1);
+        return days.stream().mapToDouble(x -> x.getOpen().orElse(-1D)).average().orElse(-1);
     }
 
     private double getAdditionalHeight() {

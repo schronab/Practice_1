@@ -1,15 +1,16 @@
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 public class Day {
     private LocalDate date;
-    private double open;
-    private double high;
-    private double low;
-    private double close;
-    private double adjClose;
-    private double volume;
+    private Optional<Double> open;
+    private Optional<Double> high;
+    private Optional<Double> low;
+    private Optional<Double> close;
+    private Optional<Double> adjClose;
+    private Optional<Double> volume;
 
     public Day(String csvString) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -18,13 +19,14 @@ public class Day {
                 .filter(i -> dayArray[i].equals("null") || dayArray[i].length() == 0)
                 .forEach(i -> dayArray[i] = "-1");
         this.date = LocalDate.parse(dayArray[0], formatter);
-        this.open = Double.parseDouble((dayArray[1]));
-        this.high = Double.parseDouble((dayArray[2]));
-        this.low = Double.parseDouble((dayArray[3]));
-        this.close = Double.parseDouble((dayArray[4]));
-        this.adjClose = Double.parseDouble((dayArray[5]));
-        this.volume = Double.parseDouble((dayArray[6]));
+        this.open = Optional.of(Double.parseDouble((dayArray[1])));
+        this.high = Optional.of(Double.parseDouble((dayArray[2])));
+        this.low = Optional.of(Double.parseDouble((dayArray[3])));
+        this.close = Optional.of(Double.parseDouble((dayArray[4])));
+        this.adjClose = Optional.of(Double.parseDouble((dayArray[5])));
+        this.volume = Optional.of(Double.parseDouble((dayArray[6])));
     }
+
     public LocalDate getDate() {
         return date;
     }
@@ -33,52 +35,52 @@ public class Day {
         this.date = date;
     }
 
-    public double getOpen() {
+    public Optional<Double> getOpen() {
         return open;
     }
 
     public void setOpen(double open) {
-        this.open = open;
+        this.open = Optional.of(open);
     }
 
-    public double getHigh() {
+    public Optional<Double> getHigh() {
         return high;
     }
 
     public void setHigh(double high) {
-        this.high = high;
+        this.high = Optional.of(high);
     }
 
-    public double getLow() {
+    public Optional<Double> getLow() {
         return low;
     }
 
     public void setLow(double low) {
-        this.low = low;
+        this.low = Optional.of(low);
     }
 
-    public double getClose() {
+    public Optional<Double> getClose() {
         return close;
     }
 
     public void setClose(double close) {
-        this.close = close;
+        this.close = Optional.of(close);
     }
 
-    public double getAdjClose() {
+    public Optional<Double> getAdjClose() {
         return adjClose;
     }
 
     public void setAdjClose(double adjClose) {
-        this.adjClose = adjClose;
+        this.adjClose = Optional.of(adjClose);
     }
 
-    public double getVolume() {
+    public Optional<Double> getVolume() {
         return volume;
     }
 
     public void setVolume(double volume) {
-        this.volume = volume;
+        this.volume = Optional.of(volume);
     }
 
     @Override
